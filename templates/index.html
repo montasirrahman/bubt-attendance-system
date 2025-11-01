@@ -1,0 +1,143 @@
+{% extends "base.html" %} {% block content %}
+<div class="row">
+  <!-- Statistics Cards -->
+  <div class="col-md-4 mb-4">
+    <div class="card bg-primary text-white h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h4 class="card-title">{{ attendance_count }}</h4>
+            <p class="card-text">Today's Attendance</p>
+          </div>
+          <div class="align-self-center">
+            <i class="fas fa-users fa-2x opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4 mb-4">
+    <div class="card bg-success text-white h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h4 class="card-title">{{ total_students }}</h4>
+            <p class="card-text">Total Students</p>
+          </div>
+          <div class="align-self-center">
+            <i class="fas fa-user-graduate fa-2x opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4 mb-4">
+    <div class="card bg-warning text-dark h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <div>
+            <h4 class="card-title">{{ trained_count }}</h4>
+            <p class="card-text">Trained Students</p>
+          </div>
+          <div class="align-self-center">
+            <i class="fas fa-brain fa-2x opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Quick Actions -->
+  <div class="col-lg-8 mb-4">
+    <div class="card">
+      <div class="card-header bg-success text-white">
+        <h5 class="card-title mb-0">
+          <i class="fas fa-rocket me-2"></i>Quick Actions
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <a
+              href="{{ url_for('register_page') }}"
+              class="btn btn-primary w-100 h-100 py-3"
+            >
+              <i class="fas fa-user-plus fa-2x mb-2"></i><br />
+              Register New Student
+            </a>
+          </div>
+          <div class="col-md-6">
+            <a
+              href="{{ url_for('train_page') }}"
+              class="btn btn-warning w-100 h-100 py-3"
+            >
+              <i class="fas fa-brain fa-2x mb-2"></i><br />
+              Train Model
+            </a>
+          </div>
+          <div class="col-md-6">
+            <a
+              href="{{ url_for('attendance_page') }}"
+              class="btn btn-success w-100 h-100 py-3"
+            >
+              <i class="fas fa-clipboard-check fa-2x mb-2"></i><br />
+              Mark Attendance
+            </a>
+          </div>
+          <div class="col-md-6">
+            <a
+              href="{{ url_for('attendance_report') }}"
+              class="btn btn-info w-100 h-100 py-3"
+            >
+              <i class="fas fa-chart-bar fa-2x mb-2"></i><br />
+              View Reports
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Today's Attendance -->
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header bg-info text-white">
+        <h5 class="card-title mb-0">
+          <i class="fas fa-clock me-2"></i>Recent Attendance
+        </h5>
+      </div>
+      <div class="card-body">
+        {% if today_attendance %}
+        <div class="list-group list-group-flush">
+          {% for record in today_attendance[:5] %}
+          <div
+            class="list-group-item d-flex justify-content-between align-items-center"
+          >
+            <div>
+              <h6 class="mb-1">{{ record[1] }}</h6>
+              <small class="text-muted"
+                >{{ record[0] }} • {{ record[2] }}</small
+              >
+            </div>
+            <span class="badge bg-success rounded-pill">{{ record[3] }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% if today_attendance|length > 5 %}
+        <div class="text-center mt-2">
+          <small class="text-muted"
+            >+{{ today_attendance|length - 5 }} more records</small
+          >
+        </div>
+        {% endif %} {% else %}
+        <p class="text-muted text-center mb-0">No attendance recorded today</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

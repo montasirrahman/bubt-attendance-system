@@ -1,0 +1,112 @@
+{% extends "base.html" %} {% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+    <div class="card">
+      <div class="card-header bg-success text-white">
+        <h4 class="card-title mb-0">
+          <i class="fas fa-clipboard-check me-2"></i>Mark Attendance
+        </h4>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-info">
+          <h5><i class="fas fa-info-circle me-2"></i>Instructions</h5>
+          <p class="mb-2">
+            Students should stand in front of the camera for automatic
+            attendance marking. The system will recognize registered students
+            and mark them present automatically.
+          </p>
+          <ul class="mb-0">
+            <li>Ensure good lighting conditions</li>
+            <li>Look directly at the camera</li>
+            <li>Stand at an appropriate distance (1-2 meters)</li>
+            <li>Each student will be marked only once per day</li>
+          </ul>
+        </div>
+
+        <div class="text-center mb-4">
+          <img
+            id="attendanceFeed"
+            src="{{ url_for('attendance_feed') }}"
+            class="img-fluid rounded"
+            style="max-width: 800px; border: 3px solid #198754"
+          />
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header bg-primary text-white">
+                <h6 class="card-title mb-0">
+                  <i class="fas fa-users me-2"></i>Today's Attendance
+                </h6>
+              </div>
+              <div class="card-body">
+                <div id="attendanceStats">
+                  <p class="text-center text-muted">
+                    Loading attendance data...
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header bg-info text-white">
+                <h6 class="card-title mb-0">
+                  <i class="fas fa-clock me-2"></i>Recent Markings
+                </h6>
+              </div>
+              <div class="card-body">
+                <div
+                  id="recentAttendance"
+                  style="max-height: 200px; overflow-y: auto"
+                >
+                  <p class="text-center text-muted">
+                    No recent attendance recorded
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  $(document).ready(function () {
+    // Update attendance stats every 5 seconds
+    function updateAttendanceStats() {
+      $.get('{{ url_for("get_attendance_stats") }}', function (data) {
+        $("#attendanceStats").html(`
+                    <h3 class="text-center text-primary">${data.count}</h3>
+                    <p class="text-center mb-0">Students Marked Present Today</p>
+                `);
+
+        if (data.attendance.length > 0) {
+          let recentHTML = "";
+          data.attendance.slice(0, 5).forEach((record) => {
+            recentHTML += `
+                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 border-bottom">
+                                <div>
+                                    <strong>${record.name}</strong><br>
+                                    <small class="text-muted">${record.id} • ${record.dept}</small>
+                                </div>
+                                <span class="badge bg-success">${record.time}</span>
+                            </div>
+                        `;
+          });
+          $("#recentAttendance").html(recentHTML);
+        }
+      });
+    }
+
+    // Initial load
+    updateAttendanceStats();
+
+    // Update every 5 seconds
+    setInterval(updateAttendanceStats, 5000);
+  });
+</script>
+{% endblock %}

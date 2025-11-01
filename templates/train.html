@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-brain me-2"></i>Train Recognition Model
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h3 class="text-primary">{{ total_students }}</h3>
+                                <p class="mb-0">Total Students</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h3 class="text-success">{{ trained_count }}</h3>
+                                <p class="mb-0">Trained Students</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <h5><i class="fas fa-info-circle me-2"></i>About Model Training</h5>
+                    <p class="mb-2">
+                        The system will train the face recognition model using all registered students' face data. 
+                        This process creates a mathematical model that can recognize students during attendance marking.
+                    </p>
+                    <ul class="mb-0">
+                        <li>Training requires at least one registered student with face data</li>
+                        <li>The process may take several minutes depending on data size</li>
+                        <li>Newly registered students need to be trained before recognition</li>
+                    </ul>
+                </div>
+                
+                <div class="text-center">
+                    <button id="trainBtn" class="btn btn-warning btn-lg" {% if total_students == 0 %}disabled{% endif %}>
+                        <i class="fas fa-cogs me-2"></i>Start Training Process
+                    </button>
+                    
+                    {% if total_students == 0 %}
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        No students registered yet. Please register students first.
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div id="trainingProgress" class="mt-4" style="display: none;">
+                    <div class="progress mb-3">
+                        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: 0%">0%</div>
+                    </div>
+                    <div id="trainingMessage" class="text-center"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#trainBtn').on('click', function() {
+            const $btn = $(this);
+            const $progress = $('#trainingProgress');
+            const $progressBar = $('#progressBar');
+            const $message = $('#trainingMessage');
+            
+            $btn.prop('disabled', true);
+            $progress.show();
+            
+            // Simulate progress (you can replace this with actual progress updates)
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 5;
+                $progressBar.css('width', progress + '%').text(progress + '%');
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                }
+            }, 200);
+            
+            $.ajax({
+                type: 'POST',
+                url: '{{ url_for("train_model") }}',
+                success: function(response) {
+                    clearInterval(interval);
+                    $progressBar.css('width', '100%').text('100%');
+                    
+                    if (response.success) {
+                        $message.html(`
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                ${response.message}
+                            </div>
+                        `);
+                    } else {
+                        $message.html(`
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                ${response.message}
+                            </div>
+                        `);
+                    }
+                    
+                    $btn.prop('disabled', false);
+                },
+                error: function() {
+                    clearInterval(interval);
+                    $message.html(`
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Error during training. Please try again.
+                        </div>
+                    `);
+                    $btn.prop('disabled', false);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends "base.html" %} {% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h4 class="card-title mb-0">
+          <i class="fas fa-user-plus me-2"></i>Register New Student
+        </h4>
+      </div>
+      <div class="card-body">
+        <form id="registrationForm">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="student_id" class="form-label">Student ID *</label>
+              <input
+                type="text"
+                class="form-control"
+                id="student_id"
+                name="student_id"
+                required
+              />
+            </div>
+            <div class="col-md-6">
+              <label for="name" class="form-label">Full Name *</label>
+              <input
+                type="text"
+                class="form-control"
+                id="name"
+                name="name"
+                required
+              />
+            </div>
+            <div class="col-md-6">
+              <label for="department" class="form-label">Department</label>
+              <select class="form-select" id="department" name="department">
+                <option value="CSE" selected>
+                  Computer Science & Engineering
+                </option>
+                <option value="EEE">Electrical & Electronic Engineering</option>
+                <option value="CE">Civil Engineering</option>
+                <option value="ME">Mechanical Engineering</option>
+                <option value="BBA">Business Administration</option>
+                <option value="MBA">Masters of Business Administration</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="semester" class="form-label">Intake</label>
+              <input
+                type="text"
+                class="form-control"
+                id="semester"
+                name="semester"
+                placeholder="e.g., 50"
+              />
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <button type="submit" class="btn btn-success btn-lg">
+              <i class="fas fa-camera me-2"></i>Proceed to Face Capture
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary btn-lg"
+              onclick="clearForm()"
+            >
+              <i class="fas fa-eraser me-2"></i>Clear Form
+            </button>
+          </div>
+        </form>
+
+        <div id="message" class="mt-3"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  $(document).ready(function () {
+    $("#registrationForm").on("submit", function (e) {
+      e.preventDefault();
+
+      const formData = $(this).serialize();
+
+      $.ajax({
+        type: "POST",
+        url: '{{ url_for("register_student") }}',
+        data: formData,
+        success: function (response) {
+          if (response.success) {
+            $("#message").html(`
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                ${response.message}
+                            </div>
+                        `);
+            // Redirect to face capture page
+            setTimeout(() => {
+              window.location.href = '{{ url_for("capture_faces") }}';
+            }, 1500);
+          } else {
+            $("#message").html(`
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                ${response.message}
+                            </div>
+                        `);
+          }
+        },
+        error: function () {
+          $("#message").html(`
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Error submitting form. Please try again.
+                        </div>
+                    `);
+        },
+      });
+    });
+  });
+
+  function clearForm() {
+    $("#registrationForm")[0].reset();
+    $("#department").val("CSE");
+    $("#message").empty();
+  }
+</script>
+{% endblock %}

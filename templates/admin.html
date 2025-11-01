@@ -1,0 +1,224 @@
+{% extends "base.html" %} {% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+    <div class="card">
+      <div class="card-header bg-warning text-dark">
+        <h4 class="card-title mb-0">
+          <i class="fas fa-cog me-2"></i>System Administration
+        </h4>
+      </div>
+      <div class="card-body">
+        <!-- Statistics -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card bg-primary text-white">
+              <div class="card-body text-center">
+                <h5>{{ total_students }}</h5>
+                <small>Total Students</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-success text-white">
+              <div class="card-body text-center">
+                <h5>{{ trained_count }}</h5>
+                <small>Trained Students</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-info text-white">
+              <div class="card-body text-center">
+                <h5>{{ attendance_count }}</h5>
+                <small>Today's Attendance</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="card bg-secondary text-white">
+              <div class="card-body text-center">
+                <h5 id="unknownFacesCount">-</h5>
+                <small>Unknown Faces</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Warning -->
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          <strong>Warning:</strong> These actions are irreversible. Please
+          proceed with caution.
+        </div>
+
+        <!-- Data Management Cards -->
+        <div class="row">
+          <!-- Clear All Data -->
+          <div class="col-md-6 mb-4">
+            <div class="card border-danger">
+              <div class="card-header bg-danger text-white">
+                <h6 class="mb-0">
+                  <i class="fas fa-broom me-2"></i>Clear All System Data
+                </h6>
+              </div>
+              <div class="card-body">
+                <p class="card-text text-danger">
+                  <strong>Dangerous:</strong> Remove ALL data including
+                  students, attendance, training data, and files. Complete
+                  system reset.
+                </p>
+                <button
+                  class="btn btn-danger btn-sm"
+                  onclick="clearData('all')"
+                >
+                  <i class="fas fa-exclamation-triangle me-1"></i>Clear
+                  Everything
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Clear Students Only -->
+          <div class="col-md-6 mb-4">
+            <div class="card">
+              <div class="card-header bg-info text-white">
+                <h6 class="mb-0">
+                  <i class="fas fa-users-slash me-2"></i>Clear Students Only
+                </h6>
+              </div>
+              <div class="card-body">
+                <p class="card-text">
+                  Remove all student records and training data. Attendance
+                  records will be preserved.
+                </p>
+                <button
+                  class="btn btn-outline-info btn-sm"
+                  onclick="clearData('students')"
+                >
+                  <i class="fas fa-trash me-1"></i>Clear Students
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Clear Attendance Only -->
+          <div class="col-md-6 mb-4">
+            <div class="card">
+              <div class="card-header bg-warning text-dark">
+                <h6 class="mb-0">
+                  <i class="fas fa-calendar-times me-2"></i>Clear Attendance
+                  Only
+                </h6>
+              </div>
+              <div class="card-body">
+                <p class="card-text">
+                  Remove all attendance records. Student data and training will
+                  be preserved.
+                </p>
+                <button
+                  class="btn btn-outline-warning btn-sm"
+                  onclick="clearData('attendance')"
+                >
+                  <i class="fas fa-trash me-1"></i>Clear Attendance
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="mt-4 text-center">
+          <a href="{{ url_for('index') }}" class="btn btn-success">
+            <i class="fas fa-home me-2"></i>Return to Dashboard
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title">Confirm Action</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmationMessage">Are you sure you want to proceed?</p>
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          This action cannot be undone!
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-danger" id="confirmAction">
+          Confirm
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script>
+  let currentAction = "";
+
+  function clearData(action) {
+    currentAction = action;
+
+    const messages = {
+      all: "clear ALL system data? This will remove students, attendance, training data, and all files. THIS CANNOT BE UNDONE!",
+      students:
+        "clear all student records and training data? Attendance records will be preserved.",
+      attendance:
+        "clear all attendance records? Student data will be preserved.",
+    };
+
+    $("#confirmationMessage").text(
+      "Are you sure you want to " + messages[action]
+    );
+    $("#confirmationModal").modal("show");
+  }
+
+  $("#confirmAction").on("click", function () {
+    const endpoints = {
+      all: "/clear_all_data",
+      students: "/clear_students_only",
+      attendance: "/clear_attendance_only",
+    };
+
+    $.ajax({
+      url: endpoints[currentAction],
+      method: "POST",
+      contentType: "application/json",
+      success: function (data) {
+        if (data.success) {
+          alert("Success: " + data.message);
+          location.reload(); // Refresh to update stats
+        } else {
+          alert("Error: " + data.message);
+        }
+      },
+      error: function (error) {
+        alert("Error: " + (error.responseJSON?.message || "Operation failed"));
+      },
+      complete: function () {
+        $("#confirmationModal").modal("hide");
+      },
+    });
+  });
+
+  $(document).ready(function () {
+    // Set unknown faces count placeholder
+    $("#unknownFacesCount").text("0");
+  });
+</script>
+{% endblock %}
