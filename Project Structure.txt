@@ -1,0 +1,18 @@
+bubt_attendance_flask/
+├── app.py
+├── templates/
+│   ├── base.html
+│   ├── index.html
+│   ├── register.html
+│   ├── capture_faces.html
+│   ├── train.html
+│   ├── attendance.html
+│   ├── view_attendance.html
+│   └── report.html
+├── static/
+│   ├── style.css
+│   └── script.js
+├── StudentImages/
+├── TrainingModel/
+├── UnknownFaces/
+└── requirements.txt
