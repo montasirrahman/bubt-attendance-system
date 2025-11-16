@@ -26,12 +26,12 @@
 
         <!-- Face Count Display -->
         <div class="mb-3">
-          <h5 id="faceCount" class="text-success">Faces Captured: 0/50</h5>
+          <h5 id="faceCount" class="text-success">Faces Captured: 0/200</h5>
         </div>
 
         <p class="text-muted mb-4">
           Please position your face in the camera view. The system will
-          automatically capture 50 images. Ensure good lighting and look
+          automatically capture 200 images. Ensure good lighting and look
           directly at the camera.
         </p>
 
@@ -94,7 +94,7 @@
       const videoFeed = $("#videoFeed");
 
       // Update face count
-      faceCountElement.text(`Faces Captured: ${data.face_count}/50`);
+      faceCountElement.text(`Faces Captured: ${data.face_count}/200`);
 
       if (data.in_progress) {
         statusElement
