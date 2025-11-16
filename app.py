@@ -24,10 +24,19 @@ DB_CONFIG = {
     'database': 'bubt_attendance_system'
 }
 
+# -------- CHANGED: Simple global variables with reset function --------
 # Global variables for face capture
 capture_complete = False
 captured_faces = []
 capture_in_progress = False
+
+def reset_capture_globals():
+    """Reset global capture variables"""
+    global capture_complete, captured_faces, capture_in_progress
+    capture_complete = False
+    captured_faces = []
+    capture_in_progress = False
+    print("✓ Capture globals reset")
 
 # ---------------- Database Functions ----------------
 def create_connection():
@@ -389,7 +398,8 @@ def get_full_report_by_date(selected_date):
 recognizer = None
 faceCascade = None
 id_to_student = {}
-tracked_today = set()
+# -------- CHANGED: Remove tracked_today set to allow multiple attendance marks --------
+# We'll track attendance in database instead of memory
 
 def initialize_face_recognition():
     """Initialize face recognition components"""
@@ -465,6 +475,9 @@ def register_student():
     if existing_name:
         return jsonify({'success': False, 'message': f'Student ID {student_id} already exists!'})
     
+    # -------- CHANGED: Reset capture before new registration --------
+    reset_capture_globals()
+    
     # Store in session for face capture
     session['registering_student'] = {
         'student_id': student_id,
@@ -489,9 +502,8 @@ def start_capture():
     
     print("\n=== START_CAPTURE CALLED ===")
     
-    # Reset all capture state
-    captured_faces = []
-    capture_complete = False
+    # -------- CHANGED: Reset all capture state using function --------
+    reset_capture_globals()
     capture_in_progress = True
     
     print(f"Capture state: complete={capture_complete}, in_progress={capture_in_progress}, faces={len(captured_faces)}")
@@ -501,7 +513,7 @@ def start_capture():
 @app.route('/check_capture_status')
 def check_capture_status():
     """Check if face capture is complete"""
-    global capture_complete, capture_in_progress, captured_faces
+    global capture_complete, captured_faces, capture_in_progress
     
     return jsonify({
         'complete': capture_complete,
@@ -562,7 +574,7 @@ def save_captured_faces():
             img_path = os.path.join(student_folder, f"face_{idx+1}.jpg")
             cv2.imwrite(img_path, face_img)
         
-        # Clear session
+        # -------- CHANGED: Clear session but don't reset globals yet --------
         session.pop('registering_student', None)
         
         return jsonify({
@@ -735,10 +747,6 @@ def clear_all_data():
             cursor.close()
             connection.close()
             
-            # Clear tracked today set
-            global tracked_today
-            tracked_today.clear()
-            
             # Clear training model files
             if os.path.exists("TrainingModel/BUBTModel.yml"):
                 os.remove("TrainingModel/BUBTModel.yml")
@@ -815,10 +823,6 @@ def clear_attendance_only():
             cursor.close()
             connection.close()
             
-            # Clear tracked today set
-            global tracked_today
-            tracked_today.clear()
-            
             return jsonify({'success': True, 'message': 'All attendance records cleared successfully'})
     except Error as e:
         print(f"Error clearing attendance: {e}")
@@ -842,7 +846,6 @@ def generate_frames():
     
     print("\n=== GENERATE_FRAMES STARTED ===")
     
-    # Don't reset here - let start_capture handle that
     if not capture_in_progress:
         print("Capture not in progress, returning...")
         return
@@ -924,9 +927,6 @@ def generate_frames():
             
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-            
-            # Small delay to control frame rate
-            # cv2.waitKey(1)
         
         print(f"\nCapture completed: {sample_num} faces captured")
         print(f"Total faces in memory: {len(captured_faces)}")
@@ -945,7 +945,8 @@ def generate_frames():
 
 def generate_attendance_frames():
     """Generate frames for attendance marking"""
-    global tracked_today
+    # -------- CHANGED: Removed tracked_today set to allow multiple attendance marks --------
+    # Now it will always update the time when a face is recognized
     
     camera = cv2.VideoCapture(0)
     if not camera.isOpened():
@@ -971,22 +972,22 @@ def generate_attendance_frames():
                     student_id = id_to_student[label_id]
                     name, department = get_student_name(student_id)
                     
-                    if name and student_id not in tracked_today:
+                    if name:
                         ts = time.time()
                         date_str = datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
                         time_str = datetime.fromtimestamp(ts).strftime('%H:%M:%S')
                         
+                        # -------- CHANGED: Always insert/update attendance to track both in-time and out-time --------
                         if insert_attendance(student_id, name, department, date_str, time_str):
-                            tracked_today.add(student_id)
-                            print(f"✓ Attendance: {student_id} - {name} ({department})")
+                            print(f"✓ Attendance Updated: {student_id} - {name} ({department}) at {time_str}")
                         
                         display_text = f"{name}"
                         display_text2 = f"ID: {student_id} | {department}"
                         color = (46, 125, 50)
                     else:
-                        display_text = f"{name if name else 'Unknown'}"
-                        display_text2 = f"ID: {student_id}"
-                        color = (255, 193, 7)
+                        display_text = "Unknown Person"
+                        display_text2 = "Not Registered"
+                        color = (244, 67, 54)
                 else:
                     display_text = "Unknown Person"
                     display_text2 = "Not Registered"
